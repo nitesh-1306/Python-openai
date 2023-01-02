@@ -1,6 +1,7 @@
 import openai
 import os
 import pyttsx3
+import AppOpener
 import urllib.request
 import speech_recognition as sr
 from playsound import playsound
@@ -62,9 +63,17 @@ def startAssistant():
         try:
             print("Recognizing...")
             question = r.recognize_google(audio)
-            print("\nYou: "+question)
+            print("\nYou: "+question.lower())
             if question == ("no" or "NO" or "No"):
                 continueQuestion = False
+            elif question.lower() == ("open whatsapp"):
+                speak("Opening Whatsapp")
+                AppOpener.open("whatsapp")
+            elif question.lower() == ("open chrome" or "open google chrome"):
+                speak("Opening Google Chrome")
+                AppOpener.open("google chrome")
+                playsound("end.mp3")
+                break
         except sr.UnknownValueError:
             speak("No audio detected!")
             continueQuestion = False
