@@ -2,7 +2,9 @@ import openai
 import os
 import pyttsx3
 import AppOpener
-import urllib.request
+import requests
+import threading
+import time
 import speech_recognition as sr
 from playsound import playsound
 from dotenv import load_dotenv
@@ -11,6 +13,7 @@ load_dotenv()
 
 openai.api_key = os.getenv("OPENAIAPI")
 internet = False
+
 
 
 
@@ -31,21 +34,23 @@ def speak(text):
     rate = engine.getProperty('rate')
     engine.setProperty('rate', rate-50)
     voices = engine.getProperty('voices')
-    engine.setProperty('voice', voices[1].id)
+    engine.setProperty('voice', voices[2].id)
     engine.say(text)
     engine.runAndWait()
 
 
 def checkInternet():
-    url = "http://www.google.com"
-    try:
-        urllib.request.urlopen(url)
-        return True
-    except urllib.error.URLError:
-        speak("By the way, before you ask any questions, I see that you are not connected to the internet or there is a connection problem.")
-        speak("I cannot answer any of your questions without internet. So please try again, after ensuring strong internet connection.")
-        playsound("end.mp3")
-        return False
+    global internet
+    while True:
+        try:
+            response = requests.get("https://google.com",timeout=5)
+            if response.status_code == 200:
+                internet = True
+            else:
+                internet = False
+        except:
+            internet = False
+        time.sleep(5)
 
 
 def startAssistant():
@@ -89,24 +94,16 @@ def startAssistant():
         else:
             playsound("end.mp3")
             break
+    if internet == False:
+        speak("By the way, before you ask any questions, I see that you are not connected to the internet or there is a connection problem.")
+        speak("I cannot answer any of your questions without internet. So please try again, after ensuring strong internet connection.")
+        playsound("end.mp3")
 
 
+t1 = threading.Thread(target=checkInternet,name='t1')
+t1.start()
 playsound("start.mp3")
 speak("Hello, I am Friday, you can ask me any questions if you want, say no to quit the program.")
-# while True:
-#     r = sr.Recognizer()
-#     r.pause_threshold = 1
-#     r.energy_threshold = 300
-#     with sr.Microphone() as source:
-#         phrase = r.listen(source)
-#     try:
-#         text = r.recognize_google(phrase)
-#         r = None
-#         if text.lower() == ("ok robin" or "Ok Robin" or "ok Robin"):
-#             print("Input Received Successfully!\r")
-internet = checkInternet()
+
 startAssistant()
 r = None
-    # except sr.UnknownValueError:
-    #     print("Retrying!")
-    #     continue
